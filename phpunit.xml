@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Suite do pdf-block/laravel.
+
+  Os casos vivem em tests/ChecksTest.php, que executa cada `*_check.php` num
+  processo proprio (ver o cabecalho da classe). Como rodar:
+
+    composer test
+
+  Sem PHP no host, use a imagem php:8.4-cli montando a raiz do repo e apontando
+  para packages/laravel (o vendor exige PHP >= 8.4.1).
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="pdf-block">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>

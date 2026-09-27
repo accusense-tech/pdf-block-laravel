@@ -1,0 +1,46 @@
+# ─── pdf-block/browserless ───────────────────────────────────────────────────
+# Imagem customizada do browserless/chromium com Noto Color Emoji.
+#
+# A imagem base usa Apple Color Emoji, que tem visual diferente do NotoColorEmoji
+# usado no driver local. Esta imagem unifica o padrão de emoji em ambos os drivers.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM ghcr.io/browserless/chromium:latest
+
+LABEL org.opencontainers.image.title="pdf-block-browserless" \
+      org.opencontainers.image.description="browserless/chromium com Noto Color Emoji — driver de PDF para pdf-block/laravel" \
+      org.opencontainers.image.source="https://github.com/accusense-tech/pdf-block-laravel" \
+      org.opencontainers.image.licenses="MIT"
+
+USER root
+
+# fonts-liberation2:   Arial / Times New Roman / Courier New (métricas idênticas)
+# fonts-dejavu-core:   DejaVu Sans/Serif (melhor substituto de Verdana/Georgia)
+# fonts-freefont-ttf:  FreeSans/Serif/Mono (fallback extra, cobre Impact)
+RUN apt-get update \
+    && apt-get install -y --reinstall fonts-noto-color-emoji \
+    && apt-get install -y --no-install-recommends \
+           curl ca-certificates fontconfig \
+           fonts-liberation2 \
+           fonts-dejavu-core \
+           fonts-freefont-ttf \
+    && rm -rf /var/lib/apt/lists/* \
+    && printf '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <alias>\n    <family>emoji</family>\n    <prefer><family>Noto Color Emoji</family></prefer>\n  </alias>\n</fontconfig>\n' \
+           > /etc/fonts/conf.d/01-noto-color-emoji.conf
+
+# Aliases explícitos para as fontes de sistema do catálogo do editor
+# (`packages/react/src/fontCatalog.ts`) → equivalentes instalados.
+# Garante que Arial, Verdana, Courier New, Georgia etc. resolvam no container
+# mesmo sem os arquivos .ttf proprietários.
+COPY docker/font-aliases.conf /etc/fonts/conf.d/10-pdfblock-system-fonts.conf
+
+# Baixa as 21 fontes curadas para uso local do Chromium. Com isso o
+# Browserless resolve qualquer família do catálogo do editor via fontconfig,
+# eliminando por completo o tráfego para fonts.googleapis.com em runtime.
+# Recomendado rodar com PDF_BLOCK_GOOGLE_FONTS=false no .env.
+COPY docker/install-fonts.sh /tmp/install-fonts.sh
+RUN chmod +x /tmp/install-fonts.sh \
+    && /tmp/install-fonts.sh \
+    && rm /tmp/install-fonts.sh \
+    && fc-cache -f   # cobre fontes do apt + Google fonts + aliases de sistema
+
+USER blessuser
