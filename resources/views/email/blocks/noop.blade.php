@@ -1,0 +1,1 @@
+{{-- pdf-block::email.blocks.noop — pagebreak/chart/svg não têm forma em e-mail: saída vazia (o @switch antigo caía num @break sem emitir nada). --}}
